@@ -1,5 +1,4 @@
 import java.util.*;
-import java.lang.*;
 
 class Customer{
     static int customerID_Counter = 0;
@@ -12,7 +11,6 @@ class Customer{
         this.name = name;
         this.mobile = mobile;
     }
-
     static HashMap<Integer, Customer>custMap = new HashMap<>();
     
     static void addCustomer(){
@@ -40,18 +38,19 @@ class Customer{
 
 class Car{
     static int carID_Counter = 0;
-    int carID = 0;
+    int carID ;
     String carName;
     String carNumber;
     double startTime;
     ParkingLot parkLot;
     int lot;
+    
 
     Car(String carName, String carNumber, ParkingLot parkLot, double startTime){
         this.carID = ++carID_Counter;
         this.carName = carName;
         this.carNumber = carNumber;
-        ParkingLot parkLot;
+        this.parkLot =  parkLot;  
         this.startTime = startTime;
     }
     static HashMap<Integer, Car>carMap = new HashMap<>();
@@ -59,26 +58,31 @@ class Car{
     static void addCar(){
         Scanner sc = new Scanner(System.in);
         System.out.println("Choose the lot id from table");
-        parkLot.display_AvailableLot();
+        ParkingLot.displayAvailableLot();
+        System.out.println();
         int lot = sc.nextInt();
-        if(totalCarLot==0){
+        if(ParkingLot.totalCarLot == 0){
             System.out.println("Parking lot is house full! Wait for sometime");
         }
-        if(checkAvalability(lot)){
-            parkLot.totalCarLot-=1;   // reduce total car count
-            parkLot.lotList.set(lot, true);
+        if(ParkingLot.checkAvalability(lot)){
+            ParkingLot.totalCarLot -= 1;   // reduce total car count
+            ParkingLot.lotList.set(lot, true);
         }
         else{
             System.out.println("Already booked! Choose other lotid");
+            return;
         }
+        
         System.out.println("Enter Car Name: ");
         String carName = sc.next();
         System.out.println("Enter Car Number: ");
         String carNumber = sc.next();
         System.out.println("Enter start time: ");
         double startTime = sc.nextDouble();
+        ParkingLot parkLot = new ParkingLot(null, null, 0.0, 0.0);
+        Car car = new Car(carName, carNumber, parkLot, 0.0);
         carMap.put(lot, car);
-        Car car = new Car(carName, carNumber, parkLot);
+        
         
     }
 
@@ -87,6 +91,11 @@ class Car{
         for(Map.Entry<Integer, Car> entry: carMap.entrySet()){
             
             Car car = entry.getValue();
+            if(car.lot == 0){
+                System.out.println("Park car to display");
+                System.out.println("------------------------------------");
+                return;
+            }
             System.out.println("CarLot Number:" + car.lot);
             System.out.println("Car Name:" + car.carName);
             System.out.println("Mobile.no:" + car.carNumber);
@@ -95,16 +104,7 @@ class Car{
     }
 
     static void removeCar(){
-        parkLot.towAway();
-    }
-    
-    boolean checkAvalability(int lot){
-        if(parkLot.lotList.get(lot)==true){
-            return false;
-        }
-        else{
-            return true;
-        }
+        ParkingLot.towAway();
     }
 }
 
@@ -128,11 +128,10 @@ class ParkingLot{
         }
     }
     
-    ParkingLot parkLot = new ParkingLot(car, customer, 0.0);
-
-    static void display_AvailableLot(){
+    
+    static void displayAvailableLot(){
         for(int i=0;i<50;i++){
-            System.out.println(i + " : " + lotList.get(i));
+            System.out.print(i + " : " + lotList.get(i) + " | ");
         }
     }
     static void towAway(){
@@ -143,22 +142,36 @@ class ParkingLot{
         Customer customer = Customer.custMap.get(customerID);
         if(customer == null){
             System.out.println("Invalid Customer ID! Add customer towAway");
+            return;
         }
-
+        
         System.out.println("Enter CarLot Id: ");
         int lotid = sc.nextInt();
-        if(lotid>=50 || lotid<0){
+        if(lotid >= 50 || lotid < 0){
             System.out.println("Invalid LOTNumber");
+            return;
         }
         else{
-            totalCarLot+=1;
-            parkLot.lotList.set(car.lotid,false);
-
+            ParkingLot.totalCarLot+=1;
+            ParkingLot.lotList.set(lotid,false);
+            
         }
+        Car car = Car.carMap.get(lotid);
         System.out.println("Enter End Time: ");
         double endTime = sc.nextDouble();
+        ParkingLot parkLot = new ParkingLot(car, customer, 0.0, endTime);
+        parkLot.generateBill();
+    } 
 
+    static boolean checkAvalability(int lot){
+        if(ParkingLot.lotList.get(lot)==true){
+            return false;
+        }
+        else{
+            return true;
+        }
     }
+
     void calculateCharge(){
         double timeDifference = endTime - car.startTime ;
 
@@ -172,9 +185,11 @@ class ParkingLot{
         System.out.println("Customer Name: " + customer.name);
         System.out.println("Customer Mobile: " + customer.mobile);
         System.out.println("------------------------------------");
-        // complete
-        System.out.println("Car Name: " + car.name);
-
+       
+        System.out.println("Car Name: " + car.carName);
+        calculateCharge();
+        System.out.println("Total Charge: "+ totalAmount);
+        System.out.println("------------------------------------");
     }
 
 }
